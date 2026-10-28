@@ -1,33 +1,38 @@
 version: 0.2
 
-
 env:
   variables:
     GOCACHE: "/root/.cache/go-build"
-
 
 phases:
   install:
     runtime-versions:
       golang: 1.27
     commands:
-      - "go version"
-
+      - go version
 
   pre_build:
     commands:
-      - "pwd"
-      - "ls -la"
-      - "if [ -f go.mod ]; then echo 'Root has go.mod'; elif [ -d project ] && [ -f project/go.mod ]; then cd project; elif [ -d GolangProject ] && [ -f GolangProject/go.mod ]; then cd GolangProject; else cd $(dirname $(find . -name 'go.mod' | head -n 1)); fi; pwd; go mod download; go mod verify; go test -v ./..."
-
+      - pwd
+      - ls -la
+      - go mod download
+      - go mod verify
+      - go test -v ./...
 
   build:
     commands:
-      - "if [ -f go.mod ]; then echo 'Root has go.mod'; elif [ -d project ] && [ -f project/go.mod ]; then cd project; elif [ -d GolangProject ] && [ -f GolangProject/go.mod ]; then cd GolangProject; else cd $(dirname $(find . -name 'go.mod' | head -n 1)); fi; mkdir -p bin; echo 'Compiling services...'; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o application ./gateway; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bin/gateway ./gateway; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bin/order ./order; CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bin/product ./product"
-
+      - mkdir -p bin
+      - echo "Compiling root application binary..."
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o application .
+      - echo "Compiling gateway service..."
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bin/gateway ./gateway
+      - echo "Compiling order service..."
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bin/order ./services/order
+      - echo "Compiling product service..."
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bin/product ./services/product
 
 artifacts:
   files:
-    - "**/application"
-    - "**/Procfile"
-    - "**/bin/*"
+    - application
+    - Procfile
+    - bin/*
