@@ -17,7 +17,8 @@ phases:
   build:
     commands:
       - export GOCACHE=/tmp/go-cache
-      - GOOS=linux GOARCH=amd64 go build -o application .
+      - go test -v ./...
+      - go build -o application main.go
 
 artifacts:
   files:
